@@ -80,8 +80,9 @@
 </head>
 <body class="font-sans antialiased" onload="initApp()">
 
-    <!-- Fixed Navbar -->
-    <nav class="fixed w-full z-50 top-0 transition-all duration-300">
+    <<!-- Fixed Navbar ko aise update karein -->
+<nav id="navbar" class="fixed w-full z-50 top-0 transition-all duration-300">
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
             <div class="glass-panel rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 
@@ -847,6 +848,22 @@
                 btn.innerHTML = 'Confirm & Get Location';
             }
         }
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 50) {
+                // Jab user niche scroll kare, navbar ko chup (hide) kar do
+                navbar.style.transform = 'translateY(-100%)';
+            } else {
+                // Jab user upar scroll kare, navbar ko wapas le aao
+                navbar.style.transform = 'translateY(0)';
+            }
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, false);
+
     </script>
 </body>
 </html>
