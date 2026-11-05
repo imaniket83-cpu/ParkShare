@@ -79,10 +79,10 @@
 </head>
 <body class="font-sans antialiased" onload="initMaps()">
 
-    <!-- Fixed Navbar -->
+   <!-- Fixed Navbar -->
     <nav class="fixed w-full z-50 top-0 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="glass-panel rounded-2xl flex flex-wrap justify-between min-h-[4rem] py-2 items-center px-6">
+            <div class="glass-panel rounded-2xl flex flex-wrap justify-between min-h-[4rem] py-3 items-center px-6 relative">
                 <!-- Logo -->
                 <div class="flex items-center space-x-3 cursor-pointer" onclick="navTo('home')">
                     <div class="bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg p-2 shadow-lg shadow-cyan-500/30">
@@ -91,6 +91,38 @@
                     <span class="font-extrabold text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300">ParkShare</span>
                 </div>
                 
+                <!-- Desktop Navigation Links -->
+                <div class="hidden md:flex space-x-6 text-gray-300 font-medium items-center">
+                    <button onclick="navTo('home')" class="hover:text-cyan-400 transition-colors">Home</button>
+                    <button onclick="navTo('dashboard')" class="hover:text-cyan-400 transition-colors">Host Dashboard</button>
+                    <button onclick="navTo('mybookings')" class="hover:text-cyan-400 transition-colors">My Bookings</button>
+                    <button onclick="navTo('about')" class="hover:text-cyan-400 transition-colors">About</button>
+                    <button onclick="navTo('contact')" class="hover:text-cyan-400 transition-colors">Contact</button>
+                </div>
+
+                <!-- Right Action & Mobile Menu Toggle Button -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:flex space-x-2 bg-white/5 p-1 rounded-xl" id="nav-actions">
+                        <button onclick="switchTab('find')" id="btn-find" class="px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 font-bold text-white text-sm">Find</button>
+                        <button onclick="switchTab('host')" id="btn-host" class="px-3 py-2 rounded-lg text-gray-300 hover:text-white font-medium text-sm">Rent</button>
+                    </div>
+                    <!-- Mobile Hamburger Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-white text-2xl focus:outline-none p-2">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Dropdown Menu -->
+            <div id="mobile-menu" class="hidden md:hidden glass-panel rounded-2xl mt-2 p-4 flex flex-col space-y-3 text-center font-medium border border-white/20 pop-in">
+                <button onclick="navTo('home'); toggleMobileMenu();" class="py-2 hover:text-cyan-400 border-b border-white/5">Home</button>
+                <button onclick="navTo('dashboard'); toggleMobileMenu();" class="py-2 hover:text-purple-400 border-b border-white/5">Host Dashboard</button>
+                <button onclick="navTo('mybookings'); toggleMobileMenu();" class="py-2 hover:text-cyan-400 border-b border-white/5">My Bookings</button>
+                <button onclick="navTo('about'); toggleMobileMenu();" class="py-2 hover:text-cyan-400 border-b border-white/5">About Us</button>
+                <button onclick="navTo('contact'); toggleMobileMenu();" class="py-2 hover:text-purple-400">Contact</button>
+            </div>
+        </div>
+    </nav>
                 <!-- Navigation Links -->
                 <div class="hidden md:flex space-x-6 text-gray-300 font-medium items-center">
                     <button onclick="navTo('home')" class="hover:text-cyan-400 transition-colors">Home</button>
@@ -443,6 +475,11 @@
             });
 
             fetchSpotsFromFirebase();
+        }
+        // Mobile Menu Toggle Function
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
         }
 
         function fetchSpotsFromFirebase() {
