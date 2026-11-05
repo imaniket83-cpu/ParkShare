@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Firebase SDK (Compat V8 - Auth & Firestore) - Yeh version sabse stable aur compatible hai -->
+    <!-- Firebase SDK (Compat V8 - Auth & Firestore) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -408,8 +408,6 @@
 
     <!-- MAIN SCRIPT -->
     <script>
-        // FIX: Apne purana firebase project access nahi ho raha tha, isliye yeh naya configuration use karein.
-        // Yeh configuration hamare secure ParkShare demo project ke liye hai.
         const firebaseConfig = {
             apiKey: "AIzaSyDQ5M-XMZ2cXEbAHEK4OPwpwGOdahMaHEY",
             authDomain: "parkshare-a6bf0.firebaseapp.com",
@@ -420,11 +418,435 @@
             measurementId: "G-EKBLJRRS29"
         };
 
-        // Initialize Firebase (Compat V8 mode)
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        let
+        let currentUser = null;
+        let isSignUpMode = false;
+        const defaultLat = 27.0775;
+        const defaultLng = 80.5147;
+        let currentUserLat = null;
+        let currentUserLng = null;
+        let parkingSpots = []; 
+        let findMap, hostMap, findLayerGroup, userMarker, hostMarker;
+
+        function initApp() {
+            initMaps();
+            auth.onAuthStateChanged(user => {
+                currentUser = user;
+                updateAuthUI();
+            });
+        }
+
+        function updateAuthUI() {
+            const container = document.getElementById('auth-nav-container');
+            const mobileBtn = document.getElementById('mobile-auth-btn');
+            if (currentUser) {
+                container.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                        <span class="text-xs text-cyan-300 truncate max-w-[120px]">${currentUser.email}</span>
+                        <button onclick="logoutUser()" class="text-red-400 hover:text-red-300 text-xs font-bold" title="Logout"><i class="fa-solid fa-power-off"></i></button>
+                    </div>
+                `;
+                mobileBtn.innerHTML = `
+                    <button onclick="logoutUser(); toggleMobileMenu();" class="w-full py-2 bg-red-600/80 rounded-xl font-bold text-sm text-white">Logout (${currentUser.email})</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="openAuthModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs shadow-lg transition-all">
+                        <i class="fa-solid fa-user-lock mr-1"></i> Login
+                    </button>
+                `;
+                mobileBtn.innerHTML = `
+                    <button onclick="openAuthModal(); toggleMobileMenu();" class="w-full py-2 bg-purple-600 rounded-xl font-bold text-sm">Login / Signup</button>
+                `;
+            }
+        }
+
+        function openAuthModal() { document.getElementById('auth-modal').classList.remove('hidden'); }
+        function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-modal-title').innerText = isSignUpMode ? "Host Sign Up" : "Host Login";
+            document.getElementById('auth-submit-btn').innerText = isSignUpMode ? "Sign Up" : "Login";
+            document.getElementById('auth-toggle-link').innerText = isSignUpMode ? "Already have an account? Login" : "Don't have an account? Sign Up";
+        }
+
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('auth-submit-btn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+
+            try {
+                if (isSignUpMode) {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    alert("Account created successfully!");
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    alert("Logged in successfully!");
+                }
+                closeAuthModal();
+                btn.innerHTML = isSignUpMode ? "Sign Up" : "Login";
+                e.target.reset();
+            } catch (error) {
+                alert("Auth Error: " + error.message);
+                btn.innerHTML = isSignUpMode ? "Sign Up" : "Login";
+            }
+        }
+
+        async function logoutUser() {
+            await auth.signOut();
+            alert("Logged out successfully.");
+            navTo('home');
+        }
+
+        function checkAuthAndNavigate(page) {
+            if (!currentUser) {
+                alert("Kripya Host Dashboard dekhne ke liye pehle Login karein.");
+                openAuthModal();
+                return;
+            }
+            navTo(page);
+        }
+
+        function checkAuthAndRent() {
+            if (!currentUser) {
+                alert("Spot list karne ke liye pehle Login karein.");
+                openAuthModal();
+                return;
+            }
+            switchTab('host');
+        }
+
+        function checkAuthAndRentMobile() {
+            if (!currentUser) {
+                alert("Spot list karne ke liye pehle Login karein.");
+                openAuthModal();
+                return;
+            }
+            switchTab('host');
+            navTo('home');
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return (2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1); 
+        }
+
+        async function initMaps() {
+            findMap = L.map('find-map').setView([defaultLat, defaultLng], 15);
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 19, attribution: '© Google Maps' }).addTo(findMap);
+            findLayerGroup = L.layerGroup().addTo(findMap);
+            
+            hostMap = L.map('host-map').setView([defaultLat, defaultLng], 15);
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 19, attribution: '© Google Maps' }).addTo(hostMap);
+
+            hostMap.on('click', function(e) {
+                if (hostMarker) hostMap.removeLayer(hostMarker);
+                hostMarker = L.marker(e.latlng).addTo(hostMap);
+                document.getElementById('host-coords').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+            });
+
+            fetchSpotsFromFirebase();
+        }
+
+        function fetchSpotsFromFirebase() {
+            db.collection("parkingSpots").onSnapshot((snapshot) => {
+                parkingSpots = [];
+                snapshot.forEach((doc) => { parkingSpots.push({ id: doc.id, ...doc.data() }); });
+                renderResults(parkingSpots);
+            });
+        }
+
+        function getHostLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('host-coords').value = "Detecting GPS...";
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        document.getElementById('host-coords').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                        if (hostMarker) hostMap.removeLayer(hostMarker);
+                        hostMarker = L.marker([lat, lng]).addTo(hostMap);
+                        hostMap.setView([lat, lng], 17);
+                    },
+                    () => { alert("GPS denied."); document.getElementById('host-coords').value = ""; }
+                );
+            }
+        }
+
+        function useMyLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('search-location').value = "Detecting GPS...";
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        currentUserLat = position.coords.latitude;
+                        currentUserLng = position.coords.longitude;
+                        document.getElementById('search-location').value = "Live Location Active";
+                        document.getElementById('location-status').classList.remove('hidden');
+                        if(userMarker) findMap.removeLayer(userMarker);
+                        const userIcon = L.divIcon({ html: '<div style="background-color: #38bdf8; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px #38bdf8;"></div>', className: '' });
+                        userMarker = L.marker([currentUserLat, currentUserLng], {icon: userIcon}).addTo(findMap).bindPopup("<b>You are here</b>").openPopup();
+                        findMap.setView([currentUserLat, currentUserLng], 15);
+                        searchParking(); 
+                    },
+                    () => { alert("GPS denied."); document.getElementById('search-location').value = ""; }
+                );
+            }
+        }
+
+        async function listSpace(e) {
+            e.preventDefault();
+            if (!currentUser) { alert("Login required."); openAuthModal(); return; }
+            const coordsStr = document.getElementById('host-coords').value;
+            if(!coordsStr || coordsStr === "Detecting GPS...") { alert("Select location first."); return; }
+            const coords = coordsStr.split(', ');
+            const newSpot = {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                name: document.getElementById('host-landmark').value + " Parking",
+                location: document.getElementById('host-landmark').value,
+                lat: parseFloat(coords[0]), lng: parseFloat(coords[1]),
+                type: document.getElementById('host-vehicle-type').value,
+                price: parseFloat(document.getElementById('host-price').value),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            const btn = document.querySelector('#host-section button[type="submit"]');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            try {
+                await db.collection("parkingSpots").add(newSpot);
+                alert("Spot listed successfully!");
+                document.getElementById('host-coords').value = '';
+                if(hostMarker) hostMap.removeLayer(hostMarker);
+                e.target.reset();
+                btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>';
+            } catch (error) { alert("Error: " + error.message); btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>'; }
+        }
+
+        function renderResults(spots) {
+            const resultsContainer = document.getElementById('results-container');
+            const noResults = document.getElementById('no-results');
+            const hours = document.getElementById('search-hours').value || 1;
+            resultsContainer.innerHTML = '';
+            findLayerGroup.clearLayers(); 
+
+            if (currentUserLat && currentUserLng) {
+                spots.forEach(spot => spot.liveDistance = calculateDistance(currentUserLat, currentUserLng, spot.lat, spot.lng));
+                spots.sort((a, b) => a.liveDistance - b.liveDistance);
+            }
+
+            if (spots.length > 0) {
+                resultsContainer.classList.remove('hidden');
+                noResults.classList.add('hidden');
+                spots.forEach((spot, index) => {
+                    const totalCost = spot.price * hours;
+                    let distanceHtml = (currentUserLat && currentUserLng) ? `<span class="bg-blue-500/20 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30"><i class="fa-solid fa-person-walking mr-1"></i> ${spot.liveDistance} km</span>` : `<span class="bg-white/10 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-white/20">📍 Map View</span>`;
+                    const card = `
+                        <div class="glass-panel rounded-3xl p-5 card-hover pop-in" style="animation-delay: ${index * 0.1}s">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="bg-white/10 p-2 rounded-xl"><i class="fa-solid fa-car text-xl text-cyan-300"></i></div>
+                                ${distanceHtml}
+                            </div>
+                            <h3 class="font-bold text-lg mb-1 truncate">${spot.name}</h3>
+                            <p class="text-gray-400 text-xs mb-4"><i class="fa-solid fa-location-dot mr-1"></i>${spot.location}</p>
+                            <div class="bg-black/30 rounded-xl p-3 flex justify-between items-center mb-4 border border-white/5">
+                                <div><p class="text-xs text-gray-400">Rate</p><p class="text-sm font-bold text-white">₹${spot.price}/hr</p></div>
+                                <div class="text-right"><p class="text-xs text-gray-400">Total (${hours}h)</p><p class="text-xl font-extrabold text-green-400">₹${totalCost}</p></div>
+                            </div>
+                            <button onclick="openModal('${spot.name.replace(/'/g, "\\'")}', ${hours}, ${totalCost})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3 rounded-xl text-sm font-bold transition-all shadow-lg">
+                                Book & Get WhatsApp
+                            </button>
+                        </div>
+                    `;
+                    resultsContainer.innerHTML += card;
+                    const customIcon = L.divIcon({ html: `<div style="background:#38bdf8; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-parking" style="transform: rotate(45deg); color: white; font-size: 14px;"></i></div>`, className: '', iconAnchor: [15, 30], popupAnchor: [0, -30] });
+                    L.marker([spot.lat, spot.lng], {icon: customIcon}).bindPopup(`<b style="color:black;">${spot.name}</b>`).addTo(findLayerGroup);
+                });
+            } else {
+                resultsContainer.classList.add('hidden');
+                noResults.classList.remove('hidden');
+            }
+        }
+
+        function searchParking(e) {
+            if(e) e.preventDefault();
+            const location = document.getElementById('search-location').value.toLowerCase();
+            const vehicle = document.getElementById('search-vehicle').value;
+            const filteredSpots = parkingSpots.filter(spot => {
+                const matchLoc = location === "" || location.includes("live") || spot.location.toLowerCase().includes(location) || spot.name.toLowerCase().includes(location);
+                const matchVeh = vehicle === "all" || spot.type === vehicle || spot.type === "both";
+                return matchLoc && matchVeh;
+            });
+            renderResults(filteredSpots);
+        }
+
+        function switchTab(tab) {
+            document.getElementById('home-view').classList.remove('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('mybookings-view').classList.add('hidden');
+            document.getElementById('about-view').classList.add('hidden');
+            document.getElementById('contact-view').classList.add('hidden');
+
+            const findSec = document.getElementById('find-section');
+            const hostSec = document.getElementById('host-section');
+            if (tab === 'find') {
+                findSec.classList.remove('hidden');
+                hostSec.classList.add('hidden');
+                setTimeout(() => findMap.invalidateSize(), 100);
+            } else {
+                hostSec.classList.remove('hidden');
+                findSec.classList.add('hidden');
+                setTimeout(() => hostMap.invalidateSize(), 100);
+            }
+        }
+        
+        function navTo(page) {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('mybookings-view').classList.add('hidden');
+            document.getElementById('about-view').classList.add('hidden');
+            document.getElementById('contact-view').classList.add('hidden');
+            
+            document.getElementById(page + '-view').classList.remove('hidden');
+            
+            if(page === 'dashboard') loadHostDashboard();
+
+            const navActions = document.getElementById('nav-actions');
+            if(page === 'home') navActions.classList.remove('hidden');
+            else navActions.classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function loadHostDashboard() {
+            if (!currentUser) return;
+            db.collection("parkingSpots").where("uid", "==", currentUser.uid).onSnapshot((snapshot) => {
+                let spotsHtml = ''; let count = 0;
+                snapshot.forEach((doc) => {
+                    const spot = doc.data(); count++;
+                    spotsHtml += `
+                        <div class="glass-panel rounded-2xl p-5 relative">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-purple-500/20 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">₹${spot.price}/hr</span>
+                                <button onclick="deleteSpot('${doc.id}')" class="text-red-400 hover:text-red-300 text-sm"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <h4 class="font-bold text-lg mb-1">${spot.name}</h4>
+                            <p class="text-gray-400 text-xs"><i class="fa-solid fa-location-dot mr-1"></i>${spot.location}</p>
+                        </div>
+                    `;
+                });
+                document.getElementById('total-spots-count').innerText = count;
+                document.getElementById('host-listings-container').innerHTML = spotsHtml || '<p class="text-gray-400">Aapne abhi koi spot list nahi kiya hai.</p>';
+            });
+
+            db.collection("bookings").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                let bookingsHtml = ''; let bCount = 0;
+                snapshot.forEach((doc) => {
+                    const b = doc.data(); bCount++;
+                    bookingsHtml += `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="p-4 font-semibold">${b.spotName}</td>
+                            <td class="p-4 text-cyan-300">+91 ${b.mobile}</td>
+                            <td class="p-4 text-yellow-300 font-mono font-bold">${b.vehicleNo || 'N/A'}</td>
+                            <td class="p-4 text-green-400 font-bold">${b.amount}</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('total-bookings-count').innerText = bCount;
+                document.getElementById('host-bookings-table').innerHTML = bookingsHtml || '<tr><td colspan="4" class="p-4 text-center text-gray-400">No bookings yet.</td></tr>';
+            });
+        }
+
+        async function deleteSpot(id) {
+            if(confirm("Kya aap sach me is spot ko delete karna chahte hain?")) {
+                await db.collection("parkingSpots").doc(id).delete();
+            }
+        }
+
+        async function fetchUserBookings() {
+            const mobile = document.getElementById('lookup-mobile').value.trim();
+            const container = document.getElementById('user-bookings-container');
+            if(mobile.length !== 10) { alert("Enter valid 10-digit mobile number."); return; }
+            container.innerHTML = '<div class="text-center py-10 text-cyan-400"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
+            
+            const snapshot = await db.collection("bookings").where("mobile", "==", mobile).get();
+            let html = '';
+            if(snapshot.empty) {
+                container.innerHTML = '<div class="glass-panel rounded-3xl p-8 text-center text-gray-400">No bookings found.</div>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const b = doc.data();
+                const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.spotName)}`;
+                const waUrl = `https://wa.me/?text=${encodeURIComponent(`🚗 *ParkShare Booking*\nSpot: *${b.spotName}*\nVehicle: *${b.vehicleNo}*\nPaid: ${b.amount}\n📍 Location: ${mapLink}`)}`;
+                html += `
+                    <div class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <span class="bg-green-500/20 text-green-300 text-xs font-bold px-3 py-1 rounded-full border">Paid: ${b.amount}</span>
+                            <h3 class="text-xl font-bold mt-2">${b.spotName}</h3>
+                            <p class="text-yellow-300 text-sm font-mono mt-1"><i class="fa-solid fa-car mr-1"></i> Vehicle: ${b.vehicleNo || 'N/A'}</p>
+                        </div>
+                        <a href="${waUrl}" target="_blank" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl font-bold text-sm text-center shadow-lg flex items-center space-x-2">
+                            <i class="fa-brands fa-whatsapp text-lg"></i><span>Get Location on WhatsApp</span>
+                        </a>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openModal(name, hours, total) {
+            document.getElementById('modal-details').innerText = name;
+            document.getElementById('modal-hours').innerText = hours + ' Hrs';
+            document.getElementById('modal-price').innerText = '₹' + total;
+            document.getElementById('user-mobile').value = '';
+            document.getElementById('user-vehicle-no').value = '';
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('payment-modal').classList.add('hidden'); }
+        
+        async function processPayment(e) {
+            e.preventDefault();
+            const mobile = document.getElementById('user-mobile').value;
+            const vehicleNo = document.getElementById('user-vehicle-no').value.toUpperCase();
+            const spotName = document.getElementById('modal-details').innerText;
+            const amount = document.getElementById('modal-price').innerText;
+            const btn = document.querySelector('#payment-modal button[type="submit"]');
+            
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            
+            try {
+                await db.collection("bookings").add({
+                    spotName: spotName,
+                    mobile: mobile,
+                    vehicleNo: vehicleNo,
+                    amount: amount,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spotName)}`;
+                const waMessage = `🚗 *ParkShare Booking Confirmed!*\n\nSpot: *${spotName}*\nVehicle No: *${vehicleNo}*\nAmount Paid: ${amount}\nMobile: +91-${mobile}\n\n📍 *Exact Location:*\n${mapLink}\n\nDrive safe!`;
+
+                alert(`✅ Booking Confirmed!\nVehicle No: ${vehicleNo}\n\nWhatsApp khul raha hai jisme exact location mil jayegi.`);
+                closeModal();
+                btn.innerHTML = 'Confirm & Get Location';
+                window.open(`https://wa.me/?text=${encodeURIComponent(waMessage)}`, '_blank');
+            } catch (error) {
+                alert("Error: " + error.message);
+                btn.innerHTML = 'Confirm & Get Location';
+            }
+        }
+    </script>
+</body>
+</html>
