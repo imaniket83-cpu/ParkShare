@@ -182,7 +182,7 @@
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold uppercase tracking-wider text-cyan-300 mb-2">Hours</label>
-                            <input type="number" id="search-hours" min="1" value="1" class="w-full px-5 py-4 rounded-xl glass-input text-center text-sm font-bold" onchange="searchParking(event)">
+                            <input type="number" id="search-hours" min="1" placeholder="1" class="w-full px-5 py-4 rounded-xl glass-input text-center text-sm font-bold" onchange="searchParking(event)">
                         </div>
                         <div class="md:col-span-2">
                             <button type="submit" class="w-full h-[54px] bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-sm shadow-lg shadow-cyan-500/35 hover:opacity-90 transition-all">
@@ -211,25 +211,63 @@
             </div>
 
             <!-- Host Section -->
-           <div class="grid grid-cols-2 gap-4">
-    <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Vehicle Support</label>
-        <select id="host-vehicle-type" onchange="togglePriceFields()" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium">
-            <option value="both">Car & Bike</option>
-            <option value="car">Car Only</option>
-            <option value="bike">Bike Only</option>
-        </select>
-    </div>
-    <div id="car-price-box">
-        <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Car Rate/Hr (₹)</label>
-        <input type="number" id="host-car-price" placeholder="50" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
-    </div>
-</div>
+            <div id="host-section" class="hidden">
+                <div class="max-w-4xl mx-auto glass-panel rounded-3xl p-8 md:p-10 pop-in border border-white/10 shadow-2xl">
+                    <div class="text-center mb-8">
+                        <span class="bg-purple-500/10 text-purple-400 text-xs font-bold px-3.5 py-1.5 rounded-full border border-purple-500/20 uppercase tracking-widest">Host Monetization</span>
+                        <h2 class="text-3xl font-extrabold mt-3 mb-2">Pin Your Space on Map</h2>
+                        <p class="text-gray-400 text-sm">Tap on the interactive map or use GPS to set your property coordinates.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <form onsubmit="listSpace(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Selected Coordinates</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="host-coords" placeholder="Tap map or use GPS..." class="w-full px-4 py-3 rounded-xl glass-input text-gray-300 text-sm" readonly required>
+                                    <button type="button" onclick="getHostLocation()" class="bg-gradient-to-r from-purple-600 to-pink-600 px-4 rounded-xl text-white shadow-lg shadow-purple-600/30 hover:opacity-90 transition-all">
+                                        <i class="fa-solid fa-location-crosshairs text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Landmark Details</label>
+                                <input type="text" id="host-landmark" placeholder="e.g. Near Old SBI Station Road" class="w-full px-4 py-3 rounded-xl glass-input text-sm" required>
+                            </div>
 
-<div id="bike-price-box">
-    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Bike Rate/Hr (₹)</label>
-    <input type="number" id="host-bike-price" placeholder="20" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
-</div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Vehicle Support</label>
+                                    <select id="host-vehicle-type" onchange="togglePriceFields()" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium">
+                                        <option value="both">Car & Bike</option>
+                                        <option value="car">Car Only</option>
+                                        <option value="bike">Bike Only</option>
+                                    </select>
+                                </div>
+                                <div id="car-price-box">
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Car Rate/Hr (₹)</label>
+                                    <input type="number" id="host-car-price" placeholder="50" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
+                                </div>
+                            </div>
+
+                            <div id="bike-price-box">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Bike Rate/Hr (₹)</label>
+                                <input type="number" id="host-bike-price" placeholder="20" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 mt-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-bold text-base shadow-lg shadow-purple-600/35 hover:opacity-90 transition-all">
+                                Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>
+                            </button>
+                        </form>
+                        <div class="border border-white/10 rounded-2xl p-1.5 bg-black/40 self-center">
+                            <div id="host-map" style="height: 360px; width: 100%; border-radius: 0.8rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- HOST DASHBOARD VIEW -->
         <div id="dashboard-view" class="hidden pop-in">
             <div class="max-w-6xl mx-auto">
@@ -325,7 +363,7 @@
 
                 <div class="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-6 md:p-8 rounded-2xl border border-cyan-500/20 text-center">
                     <h3 class="text-2xl font-bold mb-2">Hamara Mission</h3>
-                    <p class="text-gray-300 text-sm leading-relaxed max-w-xl mx-auto">Shehron me parking ki samasya ko khatam karna aur traffic congestion ko kam karte ہوئے drivers ka keemti samay bachana.</p>
+                    <p class="text-gray-300 text-sm leading-relaxed max-w-xl mx-auto">Shehron me parking ki samasya ko khatam karna aur traffic congestion ko kam karte hue drivers ka keemti samay bachana.</p>
                 </div>
             </div>
         </div>
@@ -504,22 +542,7 @@
             }
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }, false);
-function togglePriceFields() {
-    const type = document.getElementById('host-vehicle-type').value;
-    const carBox = document.getElementById('car-price-box');
-    const bikeBox = document.getElementById('bike-price-box');
 
-    if (type === 'car') {
-        carBox.style.display = 'block';
-        bikeBox.style.display = 'none';
-    } else if (type === 'bike') {
-        carBox.style.display = 'none';
-        bikeBox.style.display = 'block';
-    } else {
-        carBox.style.display = 'block';
-        bikeBox.style.display = 'block';
-    }
-}
         function initApp() {
             initMaps();
             auth.onAuthStateChanged(user => {
@@ -621,6 +644,23 @@ function togglePriceFields() {
             navTo('home');
         }
 
+        function togglePriceFields() {
+            const type = document.getElementById('host-vehicle-type').value;
+            const carBox = document.getElementById('car-price-box');
+            const bikeBox = document.getElementById('bike-price-box');
+
+            if (type === 'car') {
+                carBox.style.display = 'block';
+                bikeBox.style.display = 'none';
+            } else if (type === 'bike') {
+                carBox.style.display = 'none';
+                bikeBox.style.display = 'block';
+            } else {
+                carBox.style.display = 'block';
+                bikeBox.style.display = 'block';
+            }
+        }
+
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -682,7 +722,7 @@ function togglePriceFields() {
                         document.getElementById('location-status').classList.remove('hidden');
                         if(userMarker) findMap.removeLayer(userMarker);
                         const userIcon = L.divIcon({ html: '<div style="background-color: #38bdf8; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 20px #38bdf8;"></div>', className: '' });
-                        userMarker = L.marker([currentUserLat, currentUserLng], {icon: userIcon}).addTo(findMap).bindPopup("<b>You are here</b>").openPopup();
+                        userMarker = L.marker([currentUserLat, currentUserLng], {icon: userIcon}).addTo(findMap).bindPopup("<b style='color:white;'>You are here</b>").openPopup();
                         findMap.setView([currentUserLat, currentUserLng], 15);
                         searchParking(); 
                     },
@@ -691,44 +731,50 @@ function togglePriceFields() {
             }
         }
 
-       async function listSpace(e) {
-    e.preventDefault();
-    if (!currentUser) { alert("Login required."); openAuthModal(); return; }
-    const coordsStr = document.getElementById('host-coords').value;
-    if(!coordsStr || coordsStr === "Detecting GPS...") { alert("Select location first."); return; }
-    const coords = coordsStr.split(', ');
-    
-    const newSpot = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        name: document.getElementById('host-landmark').value + " Parking",
-        location: document.getElementById('host-landmark').value,
-        lat: parseFloat(coords[0]), lng: parseFloat(coords[1]),
-        type: document.getElementById('host-vehicle-type').value,
-        carPrice: parseFloat(document.getElementById('host-car-price').value) || 0,
-        bikePrice: parseFloat(document.getElementById('host-bike-price').value) || 0,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    const btn = document.querySelector('#host-section button[type="submit"]');
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-    try {
-        await db.collection("parkingSpots").add(newSpot);
-        alert("Spot listed successfully with separate vehicle rates!");
-        document.getElementById('host-coords').value = '';
-        if(hostMarker) hostMap.removeLayer(hostMarker);
-        e.target.reset();
-        btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>';
-        navTo('home');
-    } catch (error) { 
-        alert("Error: " + error.message); 
-        btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>'; 
-    }
-}
+        async function listSpace(e) {
+            e.preventDefault();
+            if (!currentUser) { alert("Login required."); openAuthModal(); return; }
+            const coordsStr = document.getElementById('host-coords').value;
+            if(!coordsStr || coordsStr === "Detecting GPS...") { alert("Select location first."); return; }
+            const coords = coordsStr.split(', ');
+            
+            const vehicleType = document.getElementById('host-vehicle-type').value;
+            const carPrice = vehicleType !== 'bike' ? parseFloat(document.getElementById('host-car-price').value) || 0 : 0;
+            const bikePrice = vehicleType !== 'car' ? parseFloat(document.getElementById('host-bike-price').value) || 0 : 0;
+
+            const newSpot = {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                name: document.getElementById('host-landmark').value + " Parking",
+                location: document.getElementById('host-landmark').value,
+                lat: parseFloat(coords[0]), lng: parseFloat(coords[1]),
+                type: vehicleType,
+                carPrice: carPrice,
+                bikePrice: bikePrice,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            const btn = document.querySelector('#host-section button[type="submit"]');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            try {
+                await db.collection("parkingSpots").add(newSpot);
+                alert("Spot listed successfully!");
+                document.getElementById('host-coords').value = '';
+                if(hostMarker) hostMap.removeLayer(hostMarker);
+                e.target.reset();
+                togglePriceFields();
+                btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>';
+                navTo('home');
+            } catch (error) { 
+                alert("Error: " + error.message); 
+                btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>'; 
+            }
+        }
+
         function renderResults(spots) {
             const resultsContainer = document.getElementById('results-container');
             const noResults = document.getElementById('no-results');
-            const hours = document.getElementById('search-hours').value || 1;
+            const hours = parseInt(document.getElementById('search-hours').value) || 1;
+            const vehicleFilter = document.getElementById('search-vehicle').value;
             resultsContainer.innerHTML = '';
             findLayerGroup.clearLayers(); 
 
@@ -741,7 +787,16 @@ function togglePriceFields() {
                 resultsContainer.classList.remove('hidden');
                 noResults.classList.add('hidden');
                 spots.forEach((spot, index) => {
-                    const totalCost = spot.price * hours;
+                    let rate = spot.carPrice || spot.price || 50;
+                    let label = "Car Rate";
+                    if (vehicleFilter === 'bike' && spot.bikePrice) {
+                        rate = spot.bikePrice;
+                        label = "Bike Rate";
+                    } else if (vehicleFilter === 'all') {
+                        rate = spot.carPrice || spot.bikePrice || spot.price || 50;
+                    }
+                    const totalCost = rate * hours;
+
                     let distanceHtml = (currentUserLat && currentUserLng) ? `<span class="bg-cyan-500/10 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full border border-cyan-500/20"><i class="fa-solid fa-person-walking mr-1"></i> ${spot.liveDistance} km</span>` : `<span class="bg-white/5 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-white/10">📍 Map View</span>`;
                     const card = `
                         <div class="glass-panel rounded-3xl p-6 card-hover pop-in border border-white/10 shadow-xl" style="animation-delay: ${index * 0.08}s">
@@ -752,7 +807,7 @@ function togglePriceFields() {
                             <h3 class="font-bold text-lg mb-1 truncate text-white">${spot.name}</h3>
                             <p class="text-gray-400 text-xs mb-4 flex items-center"><i class="fa-solid fa-location-dot mr-1.5 text-cyan-400"></i>${spot.location}</p>
                             <div class="bg-black/40 rounded-2xl p-3.5 flex justify-between items-center mb-5 border border-white/5">
-                                <div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Rate</p><p class="text-sm font-bold text-white">₹${spot.price}/hr</p></div>
+                                <div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">${label}</p><p class="text-sm font-bold text-white">₹${rate}/hr</p></div>
                                 <div class="text-right"><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total (${hours}h)</p><p class="text-xl font-extrabold text-green-400">₹${totalCost}</p></div>
                             </div>
                             <button onclick="openModal('${spot.name.replace(/'/g, "\\'")}', ${hours}, ${totalCost})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/30 hover:opacity-90">
@@ -783,39 +838,44 @@ function togglePriceFields() {
         }
 
         function switchTab(tab) {
-            document.getElementById('home-view').classList.remove('hidden');
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('mybookings-view').classList.add('hidden');
-            document.getElementById('about-view').classList.add('hidden');
-            document.getElementById('contact-view').classList.add('hidden');
+            const homeView = document.getElementById('home-view');
+            if(homeView) homeView.classList.remove('hidden');
+            
+            ['dashboard-view', 'mybookings-view', 'about-view', 'contact-view'].forEach(v => {
+                const el = document.getElementById(v);
+                if(el) el.classList.add('hidden');
+            });
 
             const findSec = document.getElementById('find-section');
             const hostSec = document.getElementById('host-section');
             if (tab === 'find') {
-                findSec.classList.remove('hidden');
-                hostSec.classList.add('hidden');
-                setTimeout(() => findMap.invalidateSize(), 100);
+                if(findSec) findSec.classList.remove('hidden');
+                if(hostSec) hostSec.classList.add('hidden');
+                setTimeout(() => { if(findMap) findMap.invalidateSize(); }, 100);
             } else {
-                hostSec.classList.remove('hidden');
-                findSec.classList.add('hidden');
-                setTimeout(() => hostMap.invalidateSize(), 100);
+                if(hostSec) hostSec.classList.remove('hidden');
+                if(findSec) findSec.classList.add('hidden');
+                setTimeout(() => { if(hostMap) hostMap.invalidateSize(); }, 100);
             }
         }
         
         function navTo(page) {
-            document.getElementById('home-view').classList.add('hidden');
-            document.getElementById('dashboard-view').classList.add('hidden');
-            document.getElementById('mybookings-view').classList.add('hidden');
-            document.getElementById('about-view').classList.add('hidden');
-            document.getElementById('contact-view').classList.add('hidden');
+            const views = ['home-view', 'dashboard-view', 'mybookings-view', 'about-view', 'contact-view'];
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if(el) el.classList.add('hidden');
+            });
             
-            document.getElementById(page + '-view').classList.remove('hidden');
+            const target = document.getElementById(page + '-view');
+            if(target) target.classList.remove('hidden');
             
             if(page === 'dashboard') loadHostDashboard();
 
             const navActions = document.getElementById('nav-actions');
-            if(page === 'home') navActions.classList.remove('hidden');
-            else navActions.classList.add('hidden');
+            if(navActions) {
+                if(page === 'home') navActions.classList.remove('hidden');
+                else navActions.classList.add('hidden');
+            }
         }
 
         function toggleMobileMenu() {
@@ -831,7 +891,7 @@ function togglePriceFields() {
                     spotsHtml += `
                         <div class="glass-panel rounded-2xl p-5 relative border border-white/10 card-hover">
                             <div class="flex justify-between items-start mb-3">
-                                <span class="bg-purple-500/10 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/20">₹${spot.price}/hr</span>
+                                <span class="bg-purple-500/10 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/20">Car: ₹${spot.carPrice || 0} | Bike: ₹${spot.bikePrice || 0}</span>
                                 <button onclick="deleteSpot('${doc.id}')" class="text-red-400 hover:text-red-300 text-sm p-1"><i class="fa-solid fa-trash"></i></button>
                             </div>
                             <h4 class="font-bold text-base mb-1 text-white">${spot.name}</h4>
