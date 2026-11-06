@@ -136,7 +136,10 @@
             <!-- Mobile Dropdown Menu -->
             <div id="mobile-menu" class="hidden md:hidden glass-panel rounded-2xl mt-2 p-4 flex flex-col space-y-3 text-center font-medium border border-white/10 pop-in shadow-2xl">
                 <button onclick="navTo('home'); toggleMobileMenu();" class="py-2.5 hover:text-cyan-400 border-b border-white/5">Home</button>
-                <button onclick="switchTab('find'); navTo('home'); toggleMobileMenu();" class="py-2.5 text-cyan-300 font-bold border-b border-white/5"><i class="fa-solid fa-magnifying-glass mr-1"></i> Find Spot</button>
+               <div class="flex space-x-1 bg-black/40 p-1.5 rounded-xl border border-white/5" id="nav-actions">
+    <button onclick="switchTab('find')" id="tab-find" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-white text-xs shadow-md transition-all">Find Spot</button>
+    <button onclick="checkAuthAndRent();" id="tab-host" class="px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-all">Rent Space</button>
+</div>
                 <button onclick="checkAuthAndRentMobile(); toggleMobileMenu();" class="py-2.5 text-purple-300 font-bold border-b border-white/5"><i class="fa-solid fa-plus mr-1"></i> Rent Space</button>
                 <button onclick="checkAuthAndNavigate('dashboard'); toggleMobileMenu();" class="py-2.5 hover:text-purple-400 border-b border-white/5">Host Dashboard</button>
                 <button onclick="navTo('mybookings'); toggleMobileMenu();" class="py-2.5 hover:text-cyan-400 border-b border-white/5">My Bookings</button>
@@ -852,27 +855,47 @@
             renderResults(filteredSpots);
         }
 
-        function switchTab(tab) {
-            const homeView = document.getElementById('home-view');
-            if(homeView) homeView.classList.remove('hidden');
-            
-            ['dashboard-view', 'mybookings-view', 'about-view', 'contact-view'].forEach(v => {
-                const el = document.getElementById(v);
-                if(el) el.classList.add('hidden');
-            });
+       function switchTab(tab) {
+    const homeView = document.getElementById('home-view');
+    if(homeView) homeView.classList.remove('hidden');
+    
+    ['dashboard-view', 'mybookings-view', 'about-view', 'contact-view'].forEach(v => {
+        const el = document.getElementById(v);
+        if(el) el.classList.add('hidden');
+    });
 
-            const findSec = document.getElementById('find-section');
-            const hostSec = document.getElementById('host-section');
-            if (tab === 'find') {
-                if(findSec) findSec.classList.remove('hidden');
-                if(hostSec) hostSec.classList.add('hidden');
-                setTimeout(() => { if(findMap) findMap.invalidateSize(); }, 100);
-            } else {
-                if(hostSec) hostSec.classList.remove('hidden');
-                if(findSec) findSec.classList.add('hidden');
-                setTimeout(() => { if(hostMap) hostMap.invalidateSize(); }, 100);
-            }
+    const findSec = document.getElementById('find-section');
+    const hostSec = document.getElementById('host-section');
+    const btnFind = document.getElementById('tab-find');
+    const btnHost = document.getElementById('tab-host');
+
+    if (tab === 'find') {
+        if(findSec) findSec.classList.remove('hidden');
+        if(hostSec) hostSec.classList.add('hidden');
+        if(btnFind) {
+            btnFind.className = "px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-white text-xs shadow-md transition-all";
         }
+        if(btnHost) {
+            btnHost.className = "px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-all";
+        }
+        setTimeout(() => { if(typeof findMap !== 'undefined' && findMap) findMap.invalidateSize(); }, 100);
+    } else {
+        if (!currentUser) {
+            alert("Spot list karne ke liye pehle Login karein.");
+            openAuthModal();
+            return;
+        }
+        if(hostSec) hostSec.classList.remove('hidden');
+        if(findSec) findSec.classList.add('hidden');
+        if(btnHost) {
+            btnHost.className = "px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-white text-xs shadow-md transition-all";
+        }
+        if(btnFind) {
+            btnFind.className = "px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-all";
+        }
+        setTimeout(() => { if(typeof hostMap !== 'undefined' && hostMap) hostMap.invalidateSize(); }, 100);
+    }
+}
         
         function navTo(page) {
             const views = ['home-view', 'dashboard-view', 'mybookings-view', 'about-view', 'contact-view'];
