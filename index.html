@@ -211,63 +211,25 @@
             </div>
 
             <!-- Host Section -->
-           <!-- Host Section -->
-            <div id="host-section" class="hidden">
-                <div class="max-w-4xl mx-auto glass-panel rounded-3xl p-8 md:p-10 pop-in border border-white/10 shadow-2xl">
-                    <div class="text-center mb-8">
-                        <span class="bg-purple-500/10 text-purple-400 text-xs font-bold px-3.5 py-1.5 rounded-full border border-purple-500/20 uppercase tracking-widest">Host Monetization</span>
-                        <h2 class="text-3xl font-extrabold mt-3 mb-2">Pin Your Space on Map</h2>
-                        <p class="text-gray-400 text-sm">Tap on the interactive map or use GPS to set your property coordinates.</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <form onsubmit="listSpace(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Selected Coordinates</label>
-                                <div class="flex space-x-2">
-                                    <input type="text" id="host-coords" placeholder="Tap map or use GPS..." class="w-full px-4 py-3 rounded-xl glass-input text-gray-300 text-sm" readonly required>
-                                    <button type="button" onclick="getHostLocation()" class="bg-gradient-to-r from-purple-600 to-pink-600 px-4 rounded-xl text-white shadow-lg shadow-purple-600/30 hover:opacity-90 transition-all">
-                                        <i class="fa-solid fa-location-crosshairs text-xl"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Landmark Details</label>
-                                <input type="text" id="host-landmark" placeholder="e.g. Near Old SBI Station Road" class="w-full px-4 py-3 rounded-xl glass-input text-sm" required>
-                            </div>
+           <div class="grid grid-cols-2 gap-4">
+    <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Vehicle Support</label>
+        <select id="host-vehicle-type" onchange="togglePriceFields()" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium">
+            <option value="both">Car & Bike</option>
+            <option value="car">Car Only</option>
+            <option value="bike">Bike Only</option>
+        </select>
+    </div>
+    <div id="car-price-box">
+        <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Car Rate/Hr (₹)</label>
+        <input type="number" id="host-car-price" placeholder="50" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
+    </div>
+</div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Vehicle Support</label>
-                                    <select id="host-vehicle-type" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-medium">
-                                        <option value="both">Car & Bike</option>
-                                        <option value="car">Car Only</option>
-                                        <option value="bike">Bike Only</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Car Rate/Hr (₹)</label>
-                                    <input type="number" id="host-car-price" placeholder="50" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold" required>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Bike Rate/Hr (₹)</label>
-                                <input type="number" id="host-bike-price" placeholder="20" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold" required>
-                            </div>
-
-                            <button type="submit" class="w-full py-3.5 mt-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-bold text-base shadow-lg shadow-purple-600/35 hover:opacity-90 transition-all">
-                                Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>
-                            </button>
-                        </form>
-                        <div class="border border-white/10 rounded-2xl p-1.5 bg-black/40 self-center">
-                            <div id="host-map" style="height: 360px; width: 100%; border-radius: 0.8rem;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+<div id="bike-price-box">
+    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Bike Rate/Hr (₹)</label>
+    <input type="number" id="host-bike-price" placeholder="20" class="w-full px-4 py-3 rounded-xl glass-input text-sm font-bold">
+</div>
         <!-- HOST DASHBOARD VIEW -->
         <div id="dashboard-view" class="hidden pop-in">
             <div class="max-w-6xl mx-auto">
@@ -542,7 +504,22 @@
             }
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }, false);
+function togglePriceFields() {
+    const type = document.getElementById('host-vehicle-type').value;
+    const carBox = document.getElementById('car-price-box');
+    const bikeBox = document.getElementById('bike-price-box');
 
+    if (type === 'car') {
+        carBox.style.display = 'block';
+        bikeBox.style.display = 'none';
+    } else if (type === 'bike') {
+        carBox.style.display = 'none';
+        bikeBox.style.display = 'block';
+    } else {
+        carBox.style.display = 'block';
+        bikeBox.style.display = 'block';
+    }
+}
         function initApp() {
             initMaps();
             auth.onAuthStateChanged(user => {
