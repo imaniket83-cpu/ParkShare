@@ -119,11 +119,11 @@
                     <button onclick="navTo('contact')" class="hover:text-cyan-400 transition-colors">Contact</button>
                 </div>
 
-                <!-- Desktop Action & Auth State -->
+                <!-- Desktop Action & Auth State (Sahi Jagah) -->
                 <div class="hidden md:flex items-center space-x-3">
                     <div class="flex space-x-1 bg-black/40 p-1.5 rounded-xl border border-white/5" id="nav-actions">
-                        <button onclick="switchTab('find')" id="btn-find" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-white text-xs shadow-md">Find Spot</button>
-                        <button onclick="checkAuthAndRent()" id="btn-host" class="px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-colors">Rent Space</button>
+                        <button onclick="switchTab('find')" id="tab-find" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-white text-xs shadow-md transition-all">Find Spot</button>
+                        <button onclick="checkAuthAndRent()" id="tab-host" class="px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-all">Rent Space</button>
                     </div>
                     <div id="auth-nav-container">
                         <button onclick="openAuthModal()" class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 rounded-xl font-bold text-xs shadow-lg shadow-purple-600/30 transition-all">
@@ -133,13 +133,10 @@
                 </div>
             </div>
 
-            <!-- Mobile Dropdown Menu -->
+            <!-- Mobile Dropdown Menu (Alag aur Clean) -->
             <div id="mobile-menu" class="hidden md:hidden glass-panel rounded-2xl mt-2 p-4 flex flex-col space-y-3 text-center font-medium border border-white/10 pop-in shadow-2xl">
                 <button onclick="navTo('home'); toggleMobileMenu();" class="py-2.5 hover:text-cyan-400 border-b border-white/5">Home</button>
-               <div class="flex space-x-1 bg-black/40 p-1.5 rounded-xl border border-white/5" id="nav-actions">
-    <button onclick="switchTab('find')" id="tab-find" class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 font-bold text-white text-xs shadow-md transition-all">Find Spot</button>
-    <button onclick="checkAuthAndRent();" id="tab-host" class="px-4 py-2 rounded-lg text-gray-300 hover:text-white font-semibold text-xs transition-all">Rent Space</button>
-</div>
+                <button onclick="switchTab('find'); navTo('home'); toggleMobileMenu();" class="py-2.5 text-cyan-300 font-bold border-b border-white/5"><i class="fa-solid fa-magnifying-glass mr-1"></i> Find Spot</button>
                 <button onclick="checkAuthAndRentMobile(); toggleMobileMenu();" class="py-2.5 text-purple-300 font-bold border-b border-white/5"><i class="fa-solid fa-plus mr-1"></i> Rent Space</button>
                 <button onclick="checkAuthAndNavigate('dashboard'); toggleMobileMenu();" class="py-2.5 hover:text-purple-400 border-b border-white/5">Host Dashboard</button>
                 <button onclick="navTo('mybookings'); toggleMobileMenu();" class="py-2.5 hover:text-cyan-400 border-b border-white/5">My Bookings</button>
@@ -151,7 +148,6 @@
             </div>
         </div>
     </nav>
-
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-20 w-full">
 
