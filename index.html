@@ -770,61 +770,76 @@
             }
         }
 
-        function renderResults(spots) {
-            const resultsContainer = document.getElementById('results-container');
-            const noResults = document.getElementById('no-results');
-            const hours = parseInt(document.getElementById('search-hours').value) || 1;
-            const vehicleFilter = document.getElementById('search-vehicle').value;
-            resultsContainer.innerHTML = '';
-            findLayerGroup.clearLayers(); 
+       function renderResults(spots) {
+    const resultsContainer = document.getElementById('results-container');
+    const noResults = document.getElementById('no-results');
+    const hours = parseInt(document.getElementById('search-hours').value) || 1;
+    const vehicleFilter = document.getElementById('search-vehicle').value;
+    resultsContainer.innerHTML = '';
+    findLayerGroup.clearLayers(); 
 
-            if (currentUserLat && currentUserLng) {
-                spots.forEach(spot => spot.liveDistance = calculateDistance(currentUserLat, currentUserLng, spot.lat, spot.lng));
-                spots.sort((a, b) => a.liveDistance - b.liveDistance);
-            }
+    if (currentUserLat && currentUserLng) {
+        spots.forEach(spot => spot.liveDistance = calculateDistance(currentUserLat, currentUserLng, spot.lat, spot.lng));
+        spots.sort((a, b) => a.liveDistance - b.liveDistance);
+    }
 
-            if (spots.length > 0) {
-                resultsContainer.classList.remove('hidden');
-                noResults.classList.add('hidden');
-                spots.forEach((spot, index) => {
-                    let rate = spot.carPrice || spot.price || 50;
-                    let label = "Car Rate";
-                    if (vehicleFilter === 'bike' && spot.bikePrice) {
-                        rate = spot.bikePrice;
-                        label = "Bike Rate";
-                    } else if (vehicleFilter === 'all') {
-                        rate = spot.carPrice || spot.bikePrice || spot.price || 50;
-                    }
-                    const totalCost = rate * hours;
+    if (spots.length > 0) {
+        resultsContainer.classList.remove('hidden');
+        noResults.classList.add('hidden');
+        spots.forEach((spot, index) => {
+            const carRate = spot.carPrice || 0;
+            const bikeRate = spot.bikePrice || 0;
+            
+            let rateDisplayHtml = '';
+            let calculatedTotal = 50 * hours;
 
-                    let distanceHtml = (currentUserLat && currentUserLng) ? `<span class="bg-cyan-500/10 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full border border-cyan-500/20"><i class="fa-solid fa-person-walking mr-1"></i> ${spot.liveDistance} km</span>` : `<span class="bg-white/5 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-white/10">📍 Map View</span>`;
-                    const card = `
-                        <div class="glass-panel rounded-3xl p-6 card-hover pop-in border border-white/10 shadow-xl" style="animation-delay: ${index * 0.08}s">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="bg-white/5 p-2.5 rounded-xl border border-white/10"><i class="fa-solid fa-car text-xl text-cyan-400"></i></div>
-                                ${distanceHtml}
-                            </div>
-                            <h3 class="font-bold text-lg mb-1 truncate text-white">${spot.name}</h3>
-                            <p class="text-gray-400 text-xs mb-4 flex items-center"><i class="fa-solid fa-location-dot mr-1.5 text-cyan-400"></i>${spot.location}</p>
-                            <div class="bg-black/40 rounded-2xl p-3.5 flex justify-between items-center mb-5 border border-white/5">
-                                <div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">${label}</p><p class="text-sm font-bold text-white">₹${rate}/hr</p></div>
-                                <div class="text-right"><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total (${hours}h)</p><p class="text-xl font-extrabold text-green-400">₹${totalCost}</p></div>
-                            </div>
-                            <button onclick="openModal('${spot.name.replace(/'/g, "\\'")}', ${hours}, ${totalCost})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/30 hover:opacity-90">
-                                Book Spot
-                            </button>
-                        </div>
-                    `;
-                    resultsContainer.innerHTML += card;
-                    const customIcon = L.divIcon({ html: `<div style="background:#38bdf8; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(56,189,248,0.5);"><i class="fa-solid fa-parking" style="transform: rotate(45deg); color: #0f172a; font-size: 13px; font-weight: 900;"></i></div>`, className: '', iconAnchor: [16, 32], popupAnchor: [0, -32] });
-                    L.marker([spot.lat, spot.lng], {icon: customIcon}).bindPopup(`<b style="color:white;">${spot.name}</b>`).addTo(findLayerGroup);
-                });
+            if (spot.type === 'car') {
+                calculatedTotal = carRate * hours;
+                rateDisplayHtml = `<div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Car Rate</p><p class="text-sm font-bold text-white">₹${carRate}/hr</p></div>`;
+            } else if (spot.type === 'bike') {
+                calculatedTotal = bikeRate * hours;
+                rateDisplayHtml = `<div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Bike Rate</p><p class="text-sm font-bold text-white">₹${bikeRate}/hr</p></div>`;
             } else {
-                resultsContainer.classList.add('hidden');
-                noResults.classList.remove('hidden');
+                if (vehicleFilter === 'bike') {
+                    calculatedTotal = bikeRate * hours;
+                    rateDisplayHtml = `<div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Bike Rate</p><p class="text-sm font-bold text-white">₹${bikeRate}/hr</p></div>`;
+                } else if (vehicleFilter === 'car') {
+                    calculatedTotal = carRate * hours;
+                    rateDisplayHtml = `<div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Car Rate</p><p class="text-sm font-bold text-white">₹${carRate}/hr</p></div>`;
+                } else {
+                    calculatedTotal = carRate * hours; // Default to car rate if 'all'
+                    rateDisplayHtml = `<div><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Car / Bike</p><p class="text-xs font-bold text-white">🚗 ₹${carRate} | 🏍️ ₹${bikeRate}</p></div>`;
+                }
             }
-        }
 
+            let distanceHtml = (currentUserLat && currentUserLng) ? `<span class="bg-cyan-500/10 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full border border-cyan-500/20"><i class="fa-solid fa-person-walking mr-1"></i> ${spot.liveDistance} km</span>` : `<span class="bg-white/5 text-gray-300 text-xs font-bold px-3 py-1 rounded-full border border-white/10">📍 Map View</span>`;
+            
+            const card = `
+                <div class="glass-panel rounded-3xl p-6 card-hover pop-in border border-white/10 shadow-xl" style="animation-delay: ${index * 0.08}s">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-white/5 p-2.5 rounded-xl border border-white/10"><i class="fa-solid fa-car text-xl text-cyan-400"></i></div>
+                        ${distanceHtml}
+                    </div>
+                    <h3 class="font-bold text-lg mb-1 truncate text-white">${spot.name}</h3>
+                    <p class="text-gray-400 text-xs mb-4 flex items-center"><i class="fa-solid fa-location-dot mr-1.5 text-cyan-400"></i>${spot.location}</p>
+                    <div class="bg-black/40 rounded-2xl p-3.5 flex justify-between items-center mb-5 border border-white/5">
+                        ${rateDisplayHtml}
+                        <div class="text-right"><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total (${hours}h)</p><p class="text-xl font-extrabold text-green-400">₹${calculatedTotal}</p></div>
+                    </div>
+                    <button onclick="openModal('${spot.name.replace(/'/g, "\\'")}', ${hours}, ${calculatedTotal})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/30 hover:opacity-90">
+                        Book Spot
+                    </button>
+                </div>
+            `;
+            resultsContainer.innerHTML += card;
+            const customIcon = L.divIcon({ html: `<div style="background:#38bdf8; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(56,189,248,0.5);"><i class="fa-solid fa-parking" style="transform: rotate(45deg); color: #0f172a; font-size: 13px; font-weight: 900;"></i></div>`, className: '', iconAnchor: [16, 32], popupAnchor: [0, -32] });
+            L.marker([spot.lat, spot.lng], {icon: customIcon}).bindPopup(`<b style="color:white;">${spot.name}</b>`).addTo(findLayerGroup);
+        });
+    } else {
+        resultsContainer.classList.add('hidden');
+        noResults.classList.remove('hidden');
+    }
+}
         function searchParking(e) {
             if(e) e.preventDefault();
             const location = document.getElementById('search-location').value.toLowerCase();
