@@ -355,7 +355,7 @@
 
                 <div class="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-6 md:p-8 rounded-2xl border border-cyan-500/20 text-center">
                     <h3 class="text-2xl font-bold mb-2">Hamara Mission</h3>
-                    <p class="text-gray-300 text-sm leading-relaxed max-w-xl mx-auto">Shehron me parking ki samasya ko khatam karna aur traffic congestion ko kam karte hue drivers ka keemti samay bachana.</p>
+                    <p class="text-gray-300 text-sm leading-relaxed max-w-xl mx-auto">Shehron me parking ki samasya ko khatam karna aur traffic congestion ko kam karte ہوئے drivers ka keemti samay bachana.</p>
                 </div>
             </div>
         </div>
@@ -468,7 +468,7 @@
                     <i class="fa-brands fa-whatsapp text-3xl"></i>
                 </div>
                 <h2 class="text-2xl font-bold tracking-tight">Confirm Booking</h2>
-                <p class="text-green-300 mt-1 text-xs font-medium">Get exact location instantly on WhatsApp!</p>
+                <p class="text-green-300 mt-1 text-xs font-medium">Proceed to secure online payment!</p>
             </div>
             <div class="bg-black/40 rounded-2xl p-4 mb-5 border border-white/10">
                 <div class="flex justify-between mb-2"><span class="text-gray-400 text-xs">Spot</span><span class="font-bold text-xs text-right text-white" id="modal-details"></span></div>
@@ -489,7 +489,7 @@
                     <input type="text" id="user-vehicle-no" placeholder="UP32AB1234" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white uppercase outline-none focus:border-green-400 text-sm font-mono font-bold tracking-wider" required>
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-green-500/30 text-sm">
-                    Confirm & Get Location
+                    Proceed to Pay Now <i class="fa-solid fa-arrow-right ml-1"></i>
                 </button>
             </form>
         </div>
@@ -499,9 +499,9 @@
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDQ5M-XMZ2cXEbAHEK4OPwpwGOdahMaHEY",
-            authDomain: "gadiadda-a6bf0.firebaseapp.com",
-            projectId: "gadiadda-a6bf0",
-            storageBucket: "gadiadda-a6bf0.firebasestorage.app",
+            authDomain: "parkshare-a6bf0.firebaseapp.com",
+            projectId: "parkshare-a6bf0",
+            storageBucket: "parkshare-a6bf0.firebasestorage.app",
             messagingSenderId: "1038031578683",
             appId: "1:1038031578683:web:f31904074e7e8bff201e1e",
             measurementId: "G-EKBLJRRS29"
@@ -765,7 +765,7 @@
                                 <div class="text-right"><p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total (${hours}h)</p><p class="text-xl font-extrabold text-green-400">₹${totalCost}</p></div>
                             </div>
                             <button onclick="openModal('${spot.name.replace(/'/g, "\\'")}', ${hours}, ${totalCost})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-cyan-500/30 hover:opacity-90">
-                                Book & Get WhatsApp
+                                Book Spot
                             </button>
                         </div>
                     `;
@@ -926,7 +926,7 @@
             const amount = document.getElementById('modal-price').innerText;
             const btn = document.querySelector('#payment-modal button[type="submit"]');
             
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
             
             try {
                 await db.collection("bookings").add({
@@ -937,16 +937,14 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spotName)}`;
-                const waMessage = `🚗 *GadiAdda Booking Confirmed!*\n\nSpot: *${spotName}*\nVehicle No: *${vehicleNo}*\nAmount Paid: ${amount}\nMobile: +91-${mobile}\n\n📍 *Exact Location:*\n${mapLink}\n\nDrive safe!`;
-
-                alert(`✅ Booking Confirmed!\nVehicle No: ${vehicleNo}\n\nWhatsApp khul raha hai jisme exact location mil jayegi.`);
                 closeModal();
-                btn.innerHTML = 'Confirm & Get Location';
-                window.open(`https://wa.me/?text=${encodeURIComponent(waMessage)}`, '_blank');
+                btn.innerHTML = 'Proceed to Pay Now';
+                
+                // Redirect to Razorpay Payment Page
+                window.location.href = "https://rzp.io/rzp/dhJmIvhu";
             } catch (error) {
                 alert("Error: " + error.message);
-                btn.innerHTML = 'Confirm & Get Location';
+                btn.innerHTML = 'Proceed to Pay Now';
             }
         }
     </script>
