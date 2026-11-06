@@ -774,7 +774,7 @@
                     `;
                     resultsContainer.innerHTML += card;
                     const customIcon = L.divIcon({ html: `<div style="background:#38bdf8; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(56,189,248,0.5);"><i class="fa-solid fa-parking" style="transform: rotate(45deg); color: #0f172a; font-size: 13px; font-weight: 900;"></i></div>`, className: '', iconAnchor: [16, 32], popupAnchor: [0, -32] });
-                    L.marker([spot.lat, spot.lng], {icon: customIcon}).bindPopup(`<b style="color:black;">${spot.name}</b>`).addTo(findLayerGroup);
+                    L.marker([spot.lat, spot.lng], {icon: customIcon}).bindPopup(`<b style="color:white;">${spot.name}</b>`).addTo(findLayerGroup);
                 });
             } else {
                 resultsContainer.classList.add('hidden');
