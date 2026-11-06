@@ -706,34 +706,37 @@
             }
         }
 
-        async function listSpace(e) {
-            e.preventDefault();
-            if (!currentUser) { alert("Login required."); openAuthModal(); return; }
-            const coordsStr = document.getElementById('host-coords').value;
-            if(!coordsStr || coordsStr === "Detecting GPS...") { alert("Select location first."); return; }
-            const coords = coordsStr.split(', ');
-            const newSpot = {
-                uid: currentUser.uid,
-                email: currentUser.email,
-                name: document.getElementById('host-landmark').value + " Parking",
-                location: document.getElementById('host-landmark').value,
-                lat: parseFloat(coords[0]), lng: parseFloat(coords[1]),
-                type: document.getElementById('host-vehicle-type').value,
-                price: parseFloat(document.getElementById('host-price').value),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            const btn = document.querySelector('#host-section button[type="submit"]');
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-            try {
-                await db.collection("parkingSpots").add(newSpot);
-                alert("Spot listed successfully!");
-                document.getElementById('host-coords').value = '';
-                if(hostMarker) hostMap.removeLayer(hostMarker);
-                e.target.reset();
-                btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>';
-            } catch (error) { alert("Error: " + error.message); btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>'; }
-        }
-
+       async function listSpace(e) {
+    e.preventDefault();
+    if (!currentUser) { alert("Login required."); openAuthModal(); return; }
+    const coordsStr = document.getElementById('host-coords').value;
+    if(!coordsStr || coordsStr === "Detecting GPS...") { alert("Select location first."); return; }
+    const coords = coordsStr.split(', ');
+    const newSpot = {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        name: document.getElementById('host-landmark').value + " Parking",
+        location: document.getElementById('host-landmark').value,
+        lat: parseFloat(coords[0]), lng: parseFloat(coords[1]),
+        type: document.getElementById('host-vehicle-type').value,
+        price: parseFloat(document.getElementById('host-price').value),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const btn = document.querySelector('#host-section button[type="submit"]');
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+    try {
+        await db.collection("parkingSpots").add(newSpot);
+        alert("Spot listed successfully!");
+        document.getElementById('host-coords').value = '';
+        if(hostMarker) hostMap.removeLayer(hostMarker);
+        e.target.reset();
+        btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>';
+        navTo('home'); // Spot add hone ke baad seedha home par bhej dega
+    } catch (error) { 
+        alert("Error: " + error.message); 
+        btn.innerHTML = 'Add Parking Spot <i class="fa-solid fa-map-pin ml-2"></i>'; 
+    }
+}
         function renderResults(spots) {
             const resultsContainer = document.getElementById('results-container');
             const noResults = document.getElementById('no-results');
